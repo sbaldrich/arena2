@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 /**
- * Sample usage of completable futures that, given a URL, parses its html to find all img tags and proceeds to download all images.
- * It is a contrived example but does take advantage of the fact that the HttpClient can send asynchronous requests.
+ * Sample usage of completable futures that, given a URL parses its html to find all img tags and proceeds to download
+ * all found images.
  */
 
 public class CompletableFuturesImageDownloaderExample {
@@ -45,19 +45,9 @@ public class CompletableFuturesImageDownloaderExample {
                 .thenApply(HttpResponse::body)          // Grab the plain html
                 .thenApplyAsync(html -> obtainImageURIsFromHtml(uri, html), executor) // Find all images
                 .thenComposeAsync(CompletableFuturesImageDownloaderExample::downloadImages, executor) // and download them
-                .whenComplete((ign, t) -> {
-                    if(t != null){
-                        System.err.printf("Oops: %s\n", t.getMessage());
-                    }
-                    done.set(true);
-                })
                 .exceptionallyAsync(CompletableFuturesImageDownloaderExample::handleException, executor)
                 .get();
 
-
-        while(!done.get()) {
-            TimeUnit.SECONDS.sleep(1);
-        }
         System.out.println("Shutting down...");
         executor.shutdown(); // and shut it down after all is done.
     }
